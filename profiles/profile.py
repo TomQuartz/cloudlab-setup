@@ -108,7 +108,10 @@ for i in range(params.size):
     node.addService(rspec.Execute(
             shell="sh",
             command='echo "%s" ' %(ssh_hosts) + \
-                    "| sudo tee /local/cloudlab-setup/ssh/config"))
+                    '| sudo tee /local/logs/ssh_config'))
+    node.addService(rspec.Execute(
+            shell="sh",
+            command="sudo /local/cloudlab-setup/ssh/config.sh " + '"%s"' %(ssh_hosts)))
     
     if len(params.script) > 0:
         script = os.path.join("/local/cloudlab-setup", params.script)
