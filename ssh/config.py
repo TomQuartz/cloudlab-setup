@@ -18,7 +18,6 @@ ssh_config = "\n".join(f"""
 Host {host}
     Hostname {addr}
     User {user}
-    IdentityFile ~/.ssh/cloudlab_rsa
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 """ for host, addr in zip(hosts, addrs))
