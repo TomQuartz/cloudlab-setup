@@ -9,9 +9,9 @@ with open("/etc/hosts", "r") as f:
         line = line.strip()
         if "localhost" in line:
             continue
-        addr, names = line.split()
+        addr, names = line.split(maxsplit=1)
         addrs.append(addr.strip())
-        hosts.append(names.split(",")[-1].strip())
+        hosts.append(names.split()[-1].strip())
 
 user = sys.argv[1]
 ssh_config = "\n".join(f"""
