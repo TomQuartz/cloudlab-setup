@@ -46,4 +46,5 @@ sed -ri 's/.*swap.*/#&/' /etc/fstab
 sudo systemctl enable kubelet
 sudo systemctl start kubelet
 
+sudo apt-get install python3-pip
 python3 -m pip install --upgrade pip

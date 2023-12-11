@@ -12,7 +12,7 @@ curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/
 curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
 
 sudo apt-get update
-sudo apt-get install cri-o cri-o-runc
+sudo apt-get install -y cri-o cri-o-runc
 
 # network plugin
-sudo apt-get install containernetworking-plugins
+sudo apt-get install -y containernetworking-plugins
