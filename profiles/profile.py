@@ -104,21 +104,16 @@ for i in range(params.size):
             url="https://github.com/TomQuartz/cloudlab-setup/archive/main.tar.gz",
             path="/local"))
     node.addService(rspec.Execute(
-            shell="sh", command="sudo mv /local/cloudlab-setup-main /local/cloudlab-setup"))
-#     node.addService(rspec.Execute(
-#             shell="sh",
-#             command='echo "%s" ' %(ssh_hosts) + \
-#                     '| sudo tee /local/logs/ssh_config'))
+            shell="bash", command="sudo mv /local/cloudlab-setup-main /local/cloudlab-setup"))
     node.addService(rspec.Execute(
-            shell="sh",
-            command="sudo /local/cloudlab-setup/ssh/config.sh " + '"%s"' %(ssh_hosts)))
+            shell="bash",
+            command='echo "%s" | sudo tee /local/cloudlab-setup/ssh/ssh_config' %(ssh_hosts)))
     
     if len(params.script) > 0:
         script = os.path.join("/local/cloudlab-setup", params.script)
         node.addService(rspec.Execute(
-            shell="sh",
-            command="sudo %s 2>&1" % (script) + \
-                    "| sudo tee /local/logs/setup.log"))
+            shell="bash",
+            command="sudo %s 2>&1 | sudo tee /local/logs/setup.log" % (script)))
 
     request.addResource(node)
 
