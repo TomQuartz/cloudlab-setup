@@ -74,7 +74,6 @@ for name, cnt in names_json.items():
 assert params.size == len(hostnames), "The number of hostnames must match the cluster size."
 
 ip_base = "10.10.1."
-etc_hosts = '\n'.join(ip_base+str(i+1)+"    "+name for i, name in enumerate(hostnames))
 ssh_hosts = '\n'.join(["""
 Host %s
     Hostname %s%d
@@ -108,15 +107,15 @@ for i in range(params.size):
             shell="sh", command="sudo mv /local/cloudlab-setup-main /local/cloudlab-setup"))
     node.addService(rspec.Execute(
             shell="sh",
-            command="sudo /local/cloudlab-setup/ssh/setup.sh" + \
-                    ' "%s" "%s" ' %(etc_hosts, ssh_hosts) + \
-                    ">/local/logs/ssh_setup.log 2>&1"))
+            command='echo "%s" ' %(ssh_hosts) + \
+                    "| sudo tee /local/cloudlab-setup/ssh/config"))
     
     if len(params.script) > 0:
         script = os.path.join("/local/cloudlab-setup", params.script)
         node.addService(rspec.Execute(
             shell="sh",
-            command="sudo %s >/local/logs/custom_setup.log 2>&1" % (script)))
+            command="sudo %s 2>&1" % (script) + \
+                    "| sudo tee /local/logs/setup.log"))
 
     request.addResource(node)
 

@@ -2,17 +2,15 @@
 
 # keys
 BASE_DIR=`realpath $(dirname $0)`
-mkdir -p ~/.ssh && cat $BASE_DIR/cloudlab_rsa.pub >> ~/.ssh/authorized_keys
-cp $BASE_DIR/cloudlab_rsa ~/.ssh/
-chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
+cp $BASE_DIR/config ~/.ssh/
+chmod 600 ~/.ssh/config
 
-echo ~ | sudo tee /local/logs/ssh.log
+if [ ! -f ~/.ssh/cloudlab_rsa ]; then
+    echo "please generate a keypair and put it in ~/.ssh/cloudlab_rsa"
+fi
 
-# hosts
-cat <<EOF | sudo tee -a /etc/hosts
-$1
-EOF
-
-cat <<EOF | sudo tee -a ~/.ssh/config
-$2
-EOF
+hosts=($(awk '/Host / {print $2}' $BASE_DIR/config))
+for host in ${hosts[@]}; do
+    scp ~/.ssh/cloudlab_rsa $host:~/.ssh/
+    ssh -q $host "chmod 600 ~/.ssh/cloudlab_rsa"
+done
