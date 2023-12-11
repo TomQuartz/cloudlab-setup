@@ -105,10 +105,10 @@ for i in range(params.size):
             path="/local"))
     node.addService(rspec.Execute(
             shell="sh", command="sudo mv /local/cloudlab-setup-main /local/cloudlab-setup"))
-    node.addService(rspec.Execute(
-            shell="sh",
-            command='echo "%s" ' %(ssh_hosts) + \
-                    '| sudo tee /local/logs/ssh_config'))
+#     node.addService(rspec.Execute(
+#             shell="sh",
+#             command='echo "%s" ' %(ssh_hosts) + \
+#                     '| sudo tee /local/logs/ssh_config'))
     node.addService(rspec.Execute(
             shell="sh",
             command="sudo /local/cloudlab-setup/ssh/config.sh " + '"%s"' %(ssh_hosts)))
