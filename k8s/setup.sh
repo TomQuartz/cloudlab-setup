@@ -3,9 +3,12 @@
 export OS=xUbuntu_22.04
 export VERSION=1.28 # of k8s and cri-o
 
+BASE_DIR=`realpath $(dirname $0)`
+
 # firewall
 ufw disable
 
+sudo apt-get update
 sudo apt-get install -y selinux-utils
 setenforce 0  
 
@@ -38,13 +41,13 @@ swapoff -a
 sed -ri 's/.*swap.*/#&/' /etc/fstab
 
 # install cri-o v1.28
-./install_crio.sh
+$BASE_DIR/install_crio.sh
 
 # install k8s v1.28
-./install_k8s.sh
+$BASE_DIR/install_k8s.sh
 
 sudo systemctl enable kubelet
 sudo systemctl start kubelet
 
-sudo apt-get install python3-pip
+sudo apt-get install -y python3-pip
 python3 -m pip install --upgrade pip
