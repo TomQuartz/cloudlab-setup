@@ -1,3 +1,9 @@
+"""
+Allow customizing cluster size, node names, and initialization script.
+Always set up a gateway node as the first node.
+Automatically configure ssh access between nodes using a static key.
+"""	
+
 import geni.urn as urn
 import geni.portal as portal
 import geni.rspec.pg as rspec
@@ -38,19 +44,20 @@ context.defineParameter("type", "Node Type",
 
 # Default the cluster size to 7 nodes.
 context.defineParameter("size", "Cluster Size",
-        portal.ParameterType.INTEGER, 7, [],
+        portal.ParameterType.INTEGER, 1, [],
         "Specify the size of the cluster.")
 
-context.defineParameter("names", "hostnames for each node",
-        portal.ParameterType.STRING, "", [],
-        "Specify the hostnames of the cluster, except for the first node, which is always named gatway. \
-            Should be a valid json str, example: \{ \"controller\": 3, \"worker\": 3\}")
+context.defineParameter("roles", "Roles and # of nodes",
+        portal.ParameterType.STRING, "{}", [],
+        "Specify the roles and the number of nodes assuming each role. \
+            Should be a valid json str, example: { \"controller\": 3, \"worker\": 3} \
+            NOTE: excluding the first node, which is always the gateway node.")
 
-context.defineParameter("user", "cloudlab user account",
+context.defineParameter("user", "Cloudlab User Account",
         portal.ParameterType.STRING, "", [],
         "Specify the cloudlab user account name")
 
-context.defineParameter("script", "cloudlab setup script",
+context.defineParameter("script", "Cloudlab Setup Script",
         portal.ParameterType.STRING, "", [],
         "Specify the script path, relative to github repo")
 
@@ -58,7 +65,7 @@ context.defineParameter("storage", "The size for / (GB)", portal.ParameterType.I
 
 params = context.bindParameters()
 
-names_json = json.loads(params.names)
+names_json = json.loads(params.roles)
 hostnames = ["gateway"]
 for name, cnt in names_json.items():
     for i in range(cnt):
@@ -67,15 +74,15 @@ for name, cnt in names_json.items():
 assert params.size == len(hostnames), "The number of hostnames must match the cluster size."
 
 ip_base = "10.10.1."
-etc_hosts = '\n'.join(f'{ip_base}{i+1}  {name}' for i, name in enumerate(hostnames))
-ssh_hosts = '\n'.join(f"""
-Host {name}
-    Hostname {ip_base}{i+1}
-    User {params.user}
+etc_hosts = '\n'.join(ip_base+str(i+1)+"    "+name for i, name in enumerate(hostnames))
+ssh_hosts = '\n'.join(["""
+Host %s
+    Hostname %s%d
+    User %s
     IdentityFile ~/.ssh/cloudlab_rsa
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
-""" for i, name in enumerate(hostnames))
+""" %(name, ip_base, i+1, params.user) for i, name in enumerate(hostnames)])
 
 request = rspec.Request()
 
@@ -101,13 +108,15 @@ for i in range(params.size):
             shell="sh", command="sudo mv /local/cloudlab-setup-main /local/cloudlab-setup"))
     node.addService(rspec.Execute(
             shell="sh",
-            command=f'sudo /local/cloudlab-setup/ssh/setup.sh "{etc_hosts}" "{ssh_hosts}" >/local/logs/ssh_setup.log 2>&1'))
+            command="sudo /local/cloudlab-setup/ssh/setup.sh" + \
+                    ' "%s" "%s" ' %(etc_hosts, ssh_hosts) + \
+                    ">/local/logs/ssh_setup.log 2>&1"))
     
     if len(params.script) > 0:
         script = os.path.join("/local/cloudlab-setup", params.script)
         node.addService(rspec.Execute(
             shell="sh",
-            command=f'sudo {script} >/local/logs/custom_setup.log 2>&1'))
+            command="sudo %s >/local/logs/custom_setup.log 2>&1" % (script)))
 
     request.addResource(node)
 
