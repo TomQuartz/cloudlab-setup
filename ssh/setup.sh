@@ -6,6 +6,8 @@ mkdir -p ~/.ssh && cat $BASE_DIR/cloudlab_rsa.pub >> ~/.ssh/authorized_keys
 cp $BASE_DIR/cloudlab_rsa ~/.ssh/
 chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
+echo ~ | sudo tee /local/logs/ssh.log
+
 # hosts
 cat <<EOF | sudo tee -a /etc/hosts
 $1
