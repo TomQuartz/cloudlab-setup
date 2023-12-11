@@ -38,10 +38,10 @@ swapoff -a
 sed -ri 's/.*swap.*/#&/' /etc/fstab
 
 # install cri-o v1.28
-sudo ./install_crio.sh
+./install_crio.sh
 
 # install k8s v1.28
-sudo ./install_k8s.sh
+./install_k8s.sh
 
 sudo systemctl enable kubelet
 sudo systemctl start kubelet

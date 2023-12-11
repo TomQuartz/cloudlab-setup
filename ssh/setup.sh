@@ -7,10 +7,10 @@ cp $BASE_DIR/cloudlab_rsa ~/.ssh/
 chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 
 # hosts
-cat >> /etc/hosts <<EOF
+cat <<EOF | sudo tee -a /etc/hosts
 $1
 EOF
 
-cat >> ~/.ssh/config <<EOF
+cat <<EOF | sudo tee -a ~/.ssh/config
 $2
 EOF
