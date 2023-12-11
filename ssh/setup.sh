@@ -17,5 +17,5 @@ for host in ${hosts[@]}; do
         continue
     fi
     scp ~/.ssh/id_rsa $host:~/.ssh/
-    ssh -q $host "chmod 600 ~/.ssh/id_rsa"
+    ssh -q $host -- chmod 600 ~/.ssh/id_rsa
 done
