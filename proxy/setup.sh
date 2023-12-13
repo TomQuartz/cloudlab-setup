@@ -7,7 +7,7 @@ if [ ! -f "$BASE_DIR/conf/haproxy.cfg" ]; then
 fi
 
 label=${1:-"controller"}
-virtual_ip=${2:-"10.16.1.1"}
+virtual_ip=${2:-"10.10.1.100"}
 
 # check_apiserver.sh
 APISERVER_VIP=$virtual_ip envsubst < $BASE_DIR/templates/check_apiserver.sh > $BASE_DIR/conf/check_apiserver.sh
@@ -24,7 +24,7 @@ for host in ${hosts[@]}; do
     fi
     APISERVER_VIP=$virtual_ip STATE=$state PRIORITY=$priority \
         envsubst < $BASE_DIR/templates/keepalived.conf > $BASE_DIR/conf/keepalived.conf
-    ssh -q $host -- mkdir ~/api-proxy
+    ssh -q $host -- mkdir -p ~/api-proxy && rm -rf ~/api-proxy/*
     scp -r $BASE_DIR/conf $BASE_DIR/manifests $host:~/api-proxy
     ssh -q $host -- sudo mkdir -p /etc/keepalived /etc/haproxy /etc/kubernetes/manifests
     ssh -q $host -- sudo cp ~/api-proxy/conf/keepalived.conf /etc/keepalived/keepalived.conf

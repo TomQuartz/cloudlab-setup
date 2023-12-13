@@ -13,9 +13,7 @@ fi
 hosts=($(awk '/Host / {print $2}' ~/.ssh/config))
 for host in ${hosts[@]}; do
     echo $host
-    if [ $host == "gateway" ]; then
-        continue
-    fi
     scp ~/.ssh/id_rsa $host:~/.ssh/
     ssh -q $host -- chmod 600 ~/.ssh/id_rsa
+    ssh -q $host -- sudo hostnamectl set-hostname $host
 done

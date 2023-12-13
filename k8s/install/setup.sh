@@ -43,6 +43,9 @@ sed -ri 's/.*swap.*/#&/' /etc/fstab
 # install cri-o v1.28
 $BASE_DIR/install_crio.sh
 
+sudo systemctl enable crio
+sudo systemctl start crio
+
 # install k8s v1.28
 $BASE_DIR/install_k8s.sh
 
