@@ -8,7 +8,7 @@ API_VIP=${3:-"10.10.1.100"}
 # haproxy + keepalived for api server
 ../proxy/setup.sh $CONTROLLER_LABEL $API_VIP
 
-sleep 20
+sleep 10
 
 # api server auditting 
 ../audit/setup.sh $CONTROLLER_LABEL
@@ -44,7 +44,7 @@ kubectl apply -f templates/kube-flannel.yaml
 
 CONTROLLERS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
 for controller in ${CONTROLLERS[@]}; do
-    if [ $controller = $(hostname) ]; then
+    if [ $controller == MASTER_NAME ]; then
         continue
     fi
     addr=`grep $controller /etc/hosts | awk '{print $1}'`
