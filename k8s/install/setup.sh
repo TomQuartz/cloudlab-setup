@@ -55,5 +55,5 @@ sudo systemctl start kubelet
 sudo apt-get install -y python3-pip
 python3 -m pip install --upgrade pip
 
-# # install keepalived=2.2.4-0.2build1 and haproxy=2.4.22-0ubuntu0.22.04.3
-# sudo apt-get install -y keepalived haproxy
+# install keepalived=2.2.4-0.2build1 and haproxy=2.4.22-0ubuntu0.22.04.3
+sudo apt-get install -y keepalived haproxy

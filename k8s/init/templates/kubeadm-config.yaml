@@ -9,26 +9,43 @@ bootstrapTokens:
   - authentication
 kind: InitConfiguration
 localAPIEndpoint:
-  advertiseAddress: 1.2.3.4
+  advertiseAddress: ${MASTER_ADDR}
   bindPort: 6443
 nodeRegistration:
-  ignorePreflightErrors: "all"
+  ignorePreflightErrors: 
+    - all
   criSocket: unix:///var/run/crio/crio.sock
   imagePullPolicy: IfNotPresent
-  name: node
+  name: ${MASTER_NAME}
   taints: null
 ---
 apiServer:
   timeoutForControlPlane: 4m0s
   extraArgs:
-    v: 3
+    v: "2"
+    audit-log-path: /var/log/kubernetes/audit/audit.log
+    audit-policy-file: /etc/kubernetes/audit-policy.yaml
+    audit-log-maxage: "7"
+    audit-log-maxsize: "256"
+    audit-log-maxbackup: "7"
+  extraVolumes:
+    - name: audit-policy
+      hostPath: /etc/kubernetes/audit-policy.yaml
+      mountPath: /etc/kubernetes/audit-policy.yaml
+      readOnly: true
+      pathType: File
+    - name: audit-log
+      hostPath: ${HOME}/k8s/audit/log
+      mountPath: /var/log/kubernetes/audit/
+      readOnly: false
+      pathType: DirectoryOrCreate
 apiVersion: kubeadm.k8s.io/v1beta3
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
-controlPlaneEndpoint: "10.16.1.1:6443"
+controlPlaneEndpoint: "${APISERVER_VIP}:6443"
 controllerManager:
   extraArgs:
-    v: 3
+    v: "2"
 dns: {}
 etcd:
   local:
@@ -39,10 +56,10 @@ kubernetesVersion: 1.28.0
 networking:
   dnsDomain: cluster.local
   serviceSubnet: 10.96.0.0/12
-  podSubnet: "10.244.0.0/24"
+  podSubnet: "10.244.0.0/16"
 scheduler:
   extraArgs:
-    v: 3
+    v: "2"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 bindAddress: 0.0.0.0
@@ -88,7 +105,7 @@ logging:
   options:
     json:
       infoBufferSize: "0"
-  verbosity: 3
+  verbosity: 2
 metricsBindAddress: ""
 mode: ""
 nodePortAddresses: null
@@ -134,7 +151,7 @@ logging:
   options:
     json:
       infoBufferSize: "0"
-  verbosity: 3
+  verbosity: 2
 memorySwap: {}
 nodeStatusReportFrequency: 0s
 nodeStatusUpdateFrequency: 0s

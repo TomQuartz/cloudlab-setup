@@ -1,38 +1,62 @@
 BASE_DIR=`realpath $(dirname $0)`
 cd $BASE_DIR
 
-# sudo kubeadm init --apiserver-advertise-address=10.10.1.3 \
-#                 --pod-network-cidr=10.244.0.0/16 \
-#                 --control-plane-endpoint="10.10.1.100:6443" \
-#   	          --ignore-preflight-errors=all \
-#                 --v=4
+CONTROLLER_LABEL=${1:-"controller"}
+WORKER_LABEL=${2:-"worker"}
+API_VIP=${3:-"10.10.1.100"}
 
-sudo kubeadm init --config kubeadm-config.yaml --upload-certs | tee init.log
-token=$(cat init.log | grep -oP '(?<=--token )[^\s]*' | head -n 1 | tee token)
-token_hash=$(cat init.log | grep -oP '(?<=--discovery-token-ca-cert-hash )[^\s]*' | head -n 1 | tee token_hash)
-cert_key=$(cat init.log | grep -oP '(?<=--certificate-key )[^\s]*' | head -n 1 | tee cert_key)
+# haproxy + keepalived for api server
+./proxy/setup.sh $CONTROLLER_LABEL $API_VIP
+
+# api server auditting 
+./audit/setup.sh $CONTROLLER_LABEL
+
+MASTER_NAME=$(hostname)
+MASTER_ADDR=$(grep $MASTER_NAME /etc/hosts | awk '{print $1}')
+
+if ! [[ $MASTER_NAME == *"$CONTROLLER_LABEL"* ]]; then
+    echo "must be running on a controller node"
+    exit 1
+fi
+
+# kubeadm config
+# --apiserver-advertise-address=$MASTER_ADDR
+# --control-plane-endpoint=$API_VIP:6443
+# --pod-network-cidr=10.244.0.0/16 (for flannel)
+# --ignore-preflight-errors=all
+mkdir -p conf && rm -f conf/*
+MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME APISERVER_VIP=$API_VIP \
+        envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
+
+sudo kubeadm init --config conf/kubeadm-config.yaml --upload-certs | tee init.log
+
+TOKEN=$(cat init.log | grep -oP '(?<=--token )[^\s]*' | head -n 1 | tee conf/token)
+TOKEN_HASH=$(cat init.log | grep -oP '(?<=--discovery-token-ca-cert-hash )[^\s]*' | head -n 1 | tee conf/token_hash)
+CERT_KEY=$(cat init.log | grep -oP '(?<=--certificate-key )[^\s]*' | head -n 1 | tee conf/cert_key)
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubectl apply -f kube-flannel.yaml
+kubectl apply -f templates/kube-flannel.yaml
 
-# hosts=($(awk '/Host / {print $2}' ~/.ssh/config))
-# for host in ${hosts[@]}; do
-#     if ! [[ $host == *"$label"* ]] || [ $host = $(hostname) ]; then
-#         continue
-#     fi
+CONTROLLERS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
+for controller in ${CONTROLLERS[@]}; do
+    if [ $controller = $(hostname) ]; then
+        continue
+    fi
+    addr=`grep $controller /etc/hosts | awk '{print $1}'`
+    ssh -q $controller -- sudo kubeadm join ${API_VIP}:6443 \
+        --control-plane \
+        --apiserver-advertise-address $addr \
+        --token $TOKEN \
+        --discovery-token-ca-cert-hash $TOKEN_HASH \
+        --certificate-key $CERT_KEY
+done
 
-kubeadm join 10.10.1.100:6443 \
-        --apiserver-advertise-address 10.10.1.2 \
-        --token abcdef.0123456789abcdef \
-        --discovery-token-ca-cert-hash sha256:9ba292b515c3cbcd4df5f2e2931d206508b0f8c8cda1532efd4b7a44780583f2 \
-        --control-plane --certificate-key 341d1551ee47051ac7cd2ffae0ca6ef6fe1973e43534dfbbb36a0d261e26c13a
-
-# kubeadm join 10.10.1.100:6443 --token abcdef.0123456789abcdef \
-#         --discovery-token-ca-cert-hash sha256:9ba292b515c3cbcd4df5f2e2931d206508b0f8c8cda1532efd4b7a44780583f2
-
-# TODO
-# remove gateway
-# reset + iptables
+WORKERS=`grep "$WORKER_LABEL" /etc/hosts | awk '{print $NF}'`
+for worker in ${WORKERS[@]}; do
+    ssh -q $worker -- sudo kubeadm join ${API_VIP}:6443 \
+        --token $TOKEN \
+        --discovery-token-ca-cert-hash $TOKEN_HASH
+done
