@@ -6,10 +6,12 @@ WORKER_LABEL=${2:-"worker"}
 API_VIP=${3:-"10.10.1.100"}
 
 # haproxy + keepalived for api server
-./proxy/setup.sh $CONTROLLER_LABEL $API_VIP
+../proxy/setup.sh $CONTROLLER_LABEL $API_VIP
+
+sleep 20
 
 # api server auditting 
-./audit/setup.sh $CONTROLLER_LABEL
+../audit/setup.sh $CONTROLLER_LABEL
 
 MASTER_NAME=$(hostname)
 MASTER_ADDR=$(grep $MASTER_NAME /etc/hosts | awk '{print $1}')

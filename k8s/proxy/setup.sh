@@ -9,10 +9,10 @@ HOSTS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
 mkdir -p conf && rm -f conf/*
 
 # haproxy.cfg
+cp templates/haproxy.cfg conf/haproxy.cfg
 for host in ${HOSTS[@]}; do
     addr=`grep $host /etc/hosts | awk '{print $1}'`
-    echo "
-        server $host $addr:6443 check" >> conf/haproxy.cfg
+    echo "        server $host $addr:6443 check" >> conf/haproxy.cfg
 done
 
 # check_apiserver.sh
@@ -34,5 +34,6 @@ for host in ${HOSTS[@]}; do
     ssh -q $host -- sudo cp ~/k8s/proxy/conf/keepalived.conf /etc/keepalived/
     ssh -q $host -- sudo cp ~/k8s/proxy/conf/check_apiserver.sh /etc/keepalived/
     ssh -q $host -- sudo cp ~/k8s/proxy/conf/haproxy.cfg /etc/haproxy/
-    ssh -q $host -- sudo systemctl enable haproxy --now && sudo systemctl enable keepalived --now
+    ssh -q $host -- sudo systemctl enable haproxy && sudo systemctl restart haproxy
+    ssh -q $host -- sudo systemctl enable keepalived && sudo systemctl restart keepalived
 done
