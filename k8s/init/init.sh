@@ -31,7 +31,8 @@ MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME \
 APISERVER_VIP=$API_VIP APISERVER_DEST_PORT=$API_DEST_PORT APISERVER_SRC_PORT=$API_SRC_PORT \
         envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
 
-sudo kubeadm init --config conf/kubeadm-config.yaml --upload-certs --v=4 | tee init.log
+sudo kubeadm init --config conf/kubeadm-config.yaml \
+    --upload-certs --v=4 | tee init.log
 
 TOKEN=$(cat init.log | grep -oP '(?<=--token )[^\s]*' | head -n 1 | tee conf/token)
 TOKEN_HASH=$(cat init.log | grep -oP '(?<=--discovery-token-ca-cert-hash )[^\s]*' | head -n 1 | tee conf/token_hash)

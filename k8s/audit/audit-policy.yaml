@@ -4,19 +4,19 @@ kind: Policy
 omitStages:
   - "ResponseStarted"
 rules:
-- level: Request
-  verbs: ["create", "update", "patch"]
-  resources:
-    - group: ""  # core
-      resources: ["pods", "pods/status", "replicacontrollers", "container"]
-    - group: "apps"
-      resources: ["deployments", "replicasets", "statefulsets"]
-- level: Request
+  - level: Request
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""  # core
+        resources: ["pods", "pods/status", "replicacontrollers", "container"]
+      - group: "apps"
+        resources: ["deployments", "replicasets", "statefulsets"]
+  - level: Request
     verbs: ["create", "delete", "update", "patch"]
     resources:
       - group: ""  # core
         resources: ["persistentvolumeclaims", "persistentvolumes"]
-- level: None
+  - level: None
     verbs: ["get", "watch"]
     resources:
     - group: "" # core API group
