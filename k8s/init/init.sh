@@ -4,11 +4,13 @@ cd $BASE_DIR
 CONTROLLER_LABEL=${1:-"controller"}
 WORKER_LABEL=${2:-"worker"}
 API_VIP=${3:-"10.10.1.100"}
+API_DEST_PORT=${4:-"6334"}
+API_SRC_PORT=${5:-"6443"}
 
 # haproxy + keepalived for api server
-../proxy/setup.sh $CONTROLLER_LABEL $API_VIP
+../proxy/setup.sh $CONTROLLER_LABEL $API_VIP $API_DEST_PORT $API_SRC_PORT
 
-sleep 10
+sleep 5
 
 # api server auditting 
 ../audit/setup.sh $CONTROLLER_LABEL
@@ -27,10 +29,11 @@ fi
 # --pod-network-cidr=10.244.0.0/16 (for flannel)
 # --ignore-preflight-errors=all
 mkdir -p conf && rm -f conf/*
-MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME APISERVER_VIP=$API_VIP \
+MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME \
+APISERVER_VIP=$API_VIP APISERVER_DEST_PORT=$API_DEST_PORT APISERVER_SRC_PORT=$API_SRC_PORT \
         envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
 
-sudo kubeadm init --config conf/kubeadm-config.yaml --upload-certs | tee init.log
+sudo kubeadm init --config conf/kubeadm-config.yaml --upload-certs --v=4 | tee init.log
 
 TOKEN=$(cat init.log | grep -oP '(?<=--token )[^\s]*' | head -n 1 | tee conf/token)
 TOKEN_HASH=$(cat init.log | grep -oP '(?<=--discovery-token-ca-cert-hash )[^\s]*' | head -n 1 | tee conf/token_hash)
@@ -48,9 +51,10 @@ for controller in ${CONTROLLERS[@]}; do
         continue
     fi
     addr=`grep $controller /etc/hosts | awk '{print $1}'`
-    ssh -q $controller -- sudo kubeadm join ${API_VIP}:6443 \
+    ssh -q $controller -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
         --control-plane \
         --apiserver-advertise-address $addr \
+        --apiserver-bind-port $API_SRC_PORT \
         --token $TOKEN \
         --discovery-token-ca-cert-hash $TOKEN_HASH \
         --certificate-key $CERT_KEY
@@ -58,7 +62,7 @@ done
 
 WORKERS=`grep "$WORKER_LABEL" /etc/hosts | awk '{print $NF}'`
 for worker in ${WORKERS[@]}; do
-    ssh -q $worker -- sudo kubeadm join ${API_VIP}:6443 \
+    ssh -q $worker -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
         --token $TOKEN \
         --discovery-token-ca-cert-hash $TOKEN_HASH
 done

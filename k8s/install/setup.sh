@@ -6,11 +6,11 @@ export VERSION=1.28 # of k8s and cri-o
 BASE_DIR=`realpath $(dirname $0)`
 
 # firewall
-ufw disable
+sudo ufw disable
 
 sudo apt-get update
 sudo apt-get install -y selinux-utils
-setenforce 0  
+sudo setenforce 0  
 
 # iptables and forwarding 
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf

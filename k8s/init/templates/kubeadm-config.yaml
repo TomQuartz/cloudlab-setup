@@ -10,7 +10,7 @@ bootstrapTokens:
 kind: InitConfiguration
 localAPIEndpoint:
   advertiseAddress: ${MASTER_ADDR}
-  bindPort: 6443
+  bindPort: ${APISERVER_SRC_PORT}
 nodeRegistration:
   ignorePreflightErrors: 
     - all
@@ -42,7 +42,7 @@ apiServer:
 apiVersion: kubeadm.k8s.io/v1beta3
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
-controlPlaneEndpoint: "${APISERVER_VIP}:6443"
+controlPlaneEndpoint: "${APISERVER_VIP}:${APISERVER_DEST_PORT}"
 controllerManager:
   extraArgs:
     v: "2"
