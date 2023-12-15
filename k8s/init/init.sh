@@ -3,14 +3,12 @@ cd $BASE_DIR
 
 CONTROLLER_LABEL=${1:-"controller"}
 WORKER_LABEL=${2:-"worker"}
-API_VIP=${3:-"10.10.1.100"}
-API_DEST_PORT=${4:-"6334"}
+API_VIP=${3:-"10.10.1.1"}
+API_DEST_PORT=${4:-"6443"}
 API_SRC_PORT=${5:-"6443"}
 
-# haproxy + keepalived for api server
-../proxy/setup.sh $CONTROLLER_LABEL $API_VIP $API_DEST_PORT $API_SRC_PORT
-
-sleep 5
+# # haproxy + keepalived for api server
+# ../proxy/setup.sh $CONTROLLER_LABEL $API_VIP $API_DEST_PORT $API_SRC_PORT
 
 # api server auditting 
 ../audit/setup.sh $CONTROLLER_LABEL

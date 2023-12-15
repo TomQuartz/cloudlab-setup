@@ -4,7 +4,7 @@ cd $BASE_DIR
 
 CONTROLLER_LABEL=${1:-"controller"}
 API_VIP=${2:-"10.10.1.100"}
-API_DEST_PORT=${3:-"6334"}
+API_DEST_PORT=${3:-"6443"}
 API_SRC_PORT=${4:-"6443"}
 HOSTS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
 
