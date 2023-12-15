@@ -2,9 +2,17 @@
 BASE_DIR=`realpath $(dirname $0)`
 cd $BASE_DIR
 
-CONTROLLER_LABEL=${1:-"controller"}
-API_DEST_PORT=${2:-"6443"}
+API_VIP=${1:-"gateway"} # must be the hostname of a node in the cluster
+API_DEST_PORT=${2:-"8443"}
 API_SRC_PORT=${3:-"6443"}
+CONTROLLER_LABEL=${4:-"controller"}
+
+grep -qF "$API_VIP" /etc/hosts
+if ! [ $? -eq 0 ]; then
+    echo "must specify a valid hostname in the cluster as API_VIP"
+    exit 1
+fi
+
 HOSTS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
 
 mkdir -p conf
@@ -20,12 +28,17 @@ done
 APISERVER_DEST_PORT=$API_DEST_PORT envsubst < templates/nginx.conf > conf/nginx.conf
 sed -i "/upstream/r conf/backends.conf" conf/nginx.conf
 
-# custom /etc/nginx/nginx.conf
+# customize /etc/nginx/nginx.conf
 CUSTOM_DIR=/etc/nginx/custom.d
 INCLUDE_STATEMENT="include $CUSTOM_DIR/*.conf;"
-sudo mkdir -p $CUSTOM_DIR
-sudo cp conf/nginx.conf $CUSTOM_DIR/kube-api.conf
-sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-sudo grep -qxF "$INCLUDE_STATEMENT" /etc/nginx/nginx.conf \
-    || echo "$INCLUDE_STATEMENT" | sudo tee -a /etc/nginx/nginx.conf
-sudo systemctl restart nginx
+
+ssh -q $API_VIP -- mkdir -p ~/k8s/proxy/conf && rm -rf ~/k8s/proxy/conf/*
+scp conf/nginx.conf $API_VIP:~/k8s/proxy/conf/
+ssh -q $API_VIP -- sudo mkdir -p $CUSTOM_DIR
+ssh -q $API_VIP -- sudo cp ~/k8s/proxy/conf/nginx.conf $CUSTOM_DIR/kube-api.conf
+ssh -q $API_VIP -- sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
+ssh -q $API_VIP -- "sudo grep -qxF \"${INCLUDE_STATEMENT}\" /etc/nginx/nginx.conf \\
+                    || echo \"${INCLUDE_STATEMENT}\" | sudo tee -a /etc/nginx/nginx.conf"
+ssh -q $API_VIP -- sudo systemctl restart nginx
+
+exit 0

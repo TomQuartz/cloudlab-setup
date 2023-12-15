@@ -1,4 +1,5 @@
 k8s/proxy/conf
+k8s/proxy/manifests
 k8s/init/conf
 k8s/audit/log
 *.log

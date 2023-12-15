@@ -5,7 +5,7 @@ omitStages:
   - "ResponseStarted"
 rules:
   - level: Request
-    verbs: ["create", "update", "patch"]
+    verbs: ["create", "delete", "update", "patch"]
     resources:
       - group: ""  # core
         resources: ["pods", "pods/status", "replicacontrollers", "container"]

@@ -1,21 +1,14 @@
 BASE_DIR=`realpath $(dirname $0)`
 cd $BASE_DIR
 
-PROXY=${1:-"haproxy"} # nginx
-API_VIP=${2:-"10.10.1.100"} # gateway
-API_DEST_PORT=${3:-"8443"}
-API_SRC_PORT=${4:-"6443"}
-CONTROLLER_LABEL=${5:-"controller"}
-WORKER_LABEL=${6:-"worker"}
+CONTROLLER_LABEL=${1:-"controller"}
+WORKER_LABEL=${2:-"worker"}
+API_VIP=${3:-"10.10.1.100"}
+API_DEST_PORT=${4:-"8443"}
+API_SRC_PORT=${5:-"6443"}
 
-# proxy for api server
-echo "setting up $PROXY"
-../proxy/${PROXY}.sh $API_VIP $API_DEST_PORT $API_SRC_PORT $CONTROLLER_LABEL
-
-if ! [ $? -eq 0 ]; then
-    echo "Proxy setup failed"
-    exit 1
-fi
+# haproxy + keepalived for api server
+../proxy/haproxy.sh $CONTROLLER_LABEL $API_VIP $API_DEST_PORT $API_SRC_PORT
 
 # api server auditting 
 ../audit/setup.sh $CONTROLLER_LABEL
