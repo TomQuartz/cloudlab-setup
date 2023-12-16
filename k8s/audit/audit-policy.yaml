@@ -2,24 +2,48 @@
 apiVersion: audit.k8s.io/v1
 kind: Policy
 omitStages:
+  - "RequestReceived"
   - "ResponseStarted"
 rules:
+  - level: Metadata
+    verbs: ["create", "delete", "update", "patch"]
+    namespaces: ["kube-system"]
+    omitManagedFields: true
+    resources:
+      - group: ""
+        resources: ["pods", "pods/status"]
+  - level: Request
+    verbs: ["create", "delete", "update", "patch"]
+    namespaces: ["default"]
+    resources:
+      - group: ""  # core
+        resources: ["pods", "pods/status", "pods/attach", "pods/eviction"]
+      - group: ""  # core
+        resources: ["services", "services/status"]
+      - group: "apps"  # core
+        resources: ["deployments", "deployments/scale", "deployments/status"]
+      - group: "apps"  # core
+        resources: ["replicasets", "replicasets/scale", "replicasets/status"]
+      - group: "apps"  # core
+        resources: ["statefulsets", "statefulsets/scale", "statefulsets/status"]
+      # - group: ""  # core
+      #   resources: ["replicacontrollers", "replicationcontrollers/scale", "replicationcontrollers/status"]
   - level: Request
     verbs: ["create", "delete", "update", "patch"]
     resources:
       - group: ""  # core
-        resources: ["pods", "pods/status", "replicacontrollers", "container"]
-      - group: "apps"
-        resources: ["deployments", "replicasets", "statefulsets"]
-  - level: Request
-    verbs: ["create", "delete", "update", "patch"]
-    resources:
+        resources: ["persistentvolumeclaims", "persistentvolumeclaims/status"]
       - group: ""  # core
-        resources: ["persistentvolumeclaims", "persistentvolumes"]
+        resources: ["persistentvolumes", "persistentvolumes/status"]
   - level: None
     verbs: ["get", "watch"]
     resources:
-    - group: "" # core API group
-      resources: ["endpoints", "nodes", "services", "configmaps"]
+    - group: "" # core
+      resources: ["endpoints", "nodes", "configmaps"]
+    - group: "" # core
+      resources: ["events"]
+    - group: "events.k8s.io"
+      resources: ["events"]
     - group: "coordination.k8s.io"
       resources: ["leases"]
+    

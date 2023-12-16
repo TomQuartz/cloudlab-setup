@@ -39,36 +39,40 @@ APISERVER_VIP=$API_VIP APISERVER_DEST_PORT=$API_DEST_PORT APISERVER_SRC_PORT=$AP
         envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
 
 sudo kubeadm init --config conf/kubeadm-config.yaml \
-    --upload-certs --v=4 | tee init.log
+    --upload-certs | tee init.log
 
 TOKEN=$(cat init.log | grep -oP '(?<=--token )[^\s]*' | head -n 1 | tee conf/token)
 TOKEN_HASH=$(cat init.log | grep -oP '(?<=--discovery-token-ca-cert-hash )[^\s]*' | head -n 1 | tee conf/token_hash)
 CERT_KEY=$(cat init.log | grep -oP '(?<=--certificate-key )[^\s]*' | head -n 1 | tee conf/cert_key)
 
-# mkdir -p $HOME/.kube
-# sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-# sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-# kubectl apply -f templates/kube-flannel.yaml
+kubectl apply -f templates/kube-flannel.yaml
 
-# CONTROLLERS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
-# for controller in ${CONTROLLERS[@]}; do
-#     if [ $controller == MASTER_NAME ]; then
-#         continue
-#     fi
-#     addr=`grep $controller /etc/hosts | awk '{print $1}'`
-#     ssh -q $controller -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
-#         --control-plane \
-#         --apiserver-advertise-address $addr \
-#         --apiserver-bind-port $API_SRC_PORT \
-#         --token $TOKEN \
-#         --discovery-token-ca-cert-hash $TOKEN_HASH \
-#         --certificate-key $CERT_KEY
-# done
+sleep 2
 
-# WORKERS=`grep "$WORKER_LABEL" /etc/hosts | awk '{print $NF}'`
-# for worker in ${WORKERS[@]}; do
-#     ssh -q $worker -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
-#         --token $TOKEN \
-#         --discovery-token-ca-cert-hash $TOKEN_HASH
-# done
+CONTROLLERS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
+for controller in ${CONTROLLERS[@]}; do
+    if [ $controller == MASTER_NAME ]; then
+        continue
+    fi
+    addr=`grep $controller /etc/hosts | awk '{print $1}'`
+    ssh -q $controller -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
+        --control-plane \
+        --apiserver-advertise-address $addr \
+        --apiserver-bind-port $API_SRC_PORT \
+        --token $TOKEN \
+        --discovery-token-ca-cert-hash $TOKEN_HASH \
+        --certificate-key $CERT_KEY
+    sleep 2
+done
+
+WORKERS=`grep "$WORKER_LABEL" /etc/hosts | awk '{print $NF}'`
+for worker in ${WORKERS[@]}; do
+    ssh -q $worker -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
+        --token $TOKEN \
+        --discovery-token-ca-cert-hash $TOKEN_HASH
+    sleep 2
+done
