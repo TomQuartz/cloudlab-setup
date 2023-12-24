@@ -65,6 +65,7 @@ context.defineParameter("storage", "The size for / (GB)",
 params = context.bindParameters()
 
 names_json = json.loads(params.roles)
+hostnames = []
 for name, cnt in names_json.items():
     for i in range(cnt):
         hostnames.append(name + str(i+1))
