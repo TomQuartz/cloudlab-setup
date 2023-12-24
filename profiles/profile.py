@@ -1,6 +1,5 @@
 """
 Allow customizing cluster size, node names, and initialization script.
-Always set up a gateway node as the first node.
 Automatically configure ssh access between nodes using a static key.
 """
 
@@ -50,8 +49,7 @@ context.defineParameter("size", "Cluster Size",
 context.defineParameter("roles", "Roles and # of nodes",
                         portal.ParameterType.STRING, "{}", [],
                         "Specify the roles and the number of nodes assuming each role. \
-                        Should be a valid json str, example: { \"controller\": 3, \"worker\": 3} \
-                        NOTE: excluding the first node, which is always the gateway node.")
+                        Should be a valid json str, example: {\"gateway\": 1, \"controller\": 3, \"worker\": 3}")
 
 context.defineParameter("user", "Cloudlab User Account",
                         portal.ParameterType.STRING, "", [],
@@ -67,7 +65,6 @@ context.defineParameter("storage", "The size for / (GB)",
 params = context.bindParameters()
 
 names_json = json.loads(params.roles)
-hostnames = ["gateway"]
 for name, cnt in names_json.items():
     for i in range(cnt):
         hostnames.append(name + str(i+1))

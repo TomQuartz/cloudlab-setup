@@ -7,6 +7,7 @@ API_DEST_PORT=${3:-"8443"}
 API_SRC_PORT=${4:-"6443"}
 CONTROLLER_LABEL=${5:-"controller"}
 WORKER_LABEL=${6:-"worker"}
+VERBOSITY=${7:-"4"}
 
 # proxy for api server
 echo "setting up $PROXY"
@@ -34,7 +35,7 @@ fi
 # --pod-network-cidr=10.244.0.0/16 (for flannel)
 # --ignore-preflight-errors=all
 mkdir -p conf && rm -f conf/*
-MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME \
+MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME VERBOSITY=$VERBOSITY \
 APISERVER_VIP=$API_VIP APISERVER_DEST_PORT=$API_DEST_PORT APISERVER_SRC_PORT=$API_SRC_PORT \
         envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
 
