@@ -2,7 +2,7 @@
 BASE_DIR=`realpath $(dirname $0)`
 cd $BASE_DIR
 
-API_VIP=${1:-"gateway"} # must be the hostname of a node in the cluster
+API_VIP=${1:-"gateway1"} # must be the hostname of a node in the cluster
 API_DEST_PORT=${2:-"8443"}
 API_SRC_PORT=${3:-"6443"}
 CONTROLLER_LABEL=${4:-"controller"}

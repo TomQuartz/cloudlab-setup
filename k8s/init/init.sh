@@ -2,7 +2,7 @@ BASE_DIR=`realpath $(dirname $0)`
 cd $BASE_DIR
 
 PROXY=${1:-"haproxy"} # nginx
-API_VIP=${2:-"10.10.1.100"} # gateway
+API_VIP=${2:-"10.10.1.100"} # gateway1
 API_DEST_PORT=${3:-"8443"}
 API_SRC_PORT=${4:-"6443"}
 CONTROLLER_LABEL=${5:-"controller"}

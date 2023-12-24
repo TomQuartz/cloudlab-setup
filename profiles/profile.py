@@ -41,10 +41,10 @@ context.defineParameter("type", "Node Type",
                         portal.ParameterType.NODETYPE, nodes[0], nodes,
                         "Specify the type of nodes the cluster should be configured with.")
 
-# Default the cluster size to 7 nodes.
-context.defineParameter("size", "Cluster Size",
-                        portal.ParameterType.INTEGER, 1, [],
-                        "Specify the size of the cluster.")
+# # Default the cluster size to 7 nodes.
+# context.defineParameter("size", "Cluster Size",
+#                         portal.ParameterType.INTEGER, 7, [],
+#                         "Specify the size of the cluster.")
 
 context.defineParameter("roles", "Roles and # of nodes",
                         portal.ParameterType.STRING, "{}", [],
@@ -70,8 +70,8 @@ for name, cnt in names_json.items():
     for i in range(cnt):
         hostnames.append(name + str(i+1))
 
-assert params.size == len(
-    hostnames), "The number of hostnames must match the cluster size."
+# assert params.size == len(
+#     hostnames), "The number of hostnames must match the cluster size."
 
 request = rspec.Request()
 
@@ -80,7 +80,7 @@ lan = rspec.LAN()
 lan.bandwidth = 10000000  # This is in kbps.
 
 # Setup the cluster one node at a time.
-for i in range(params.size):
+for i in range(len(hostnames)):
     node = rspec.RawPC(hostnames[i])
 
     node.hardware_type = params.type
