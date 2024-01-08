@@ -5,9 +5,9 @@ cd $BASE_DIR
 API_VIP=${1:-"10.10.1.100"}
 API_DEST_PORT=${2:-"8443"}
 API_SRC_PORT=${3:-"6443"}
-CONTROLLER_LABEL=${4:-"controller"}
+PROXY_LABEL=${4:-"controller"}
 
-HOSTS=`grep "$CONTROLLER_LABEL" /etc/hosts | awk '{print $NF}'`
+HOSTS=`grep "$PROXY_LABEL" /etc/hosts | awk '{print $NF}'`
 
 mkdir -p conf
 

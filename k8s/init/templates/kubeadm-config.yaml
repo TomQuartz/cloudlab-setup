@@ -1,18 +1,18 @@
 apiVersion: kubeadm.k8s.io/v1beta3
 bootstrapTokens:
-- groups:
-  - system:bootstrappers:kubeadm:default-node-token
-  token: abcdef.0123456789abcdef
-  ttl: 24h0m0s
-  usages:
-  - signing
-  - authentication
+  - groups:
+      - system:bootstrappers:kubeadm:default-node-token
+    token: abcdef.0123456789abcdef
+    ttl: 24h0m0s
+    usages:
+      - signing
+      - authentication
 kind: InitConfiguration
 localAPIEndpoint:
   advertiseAddress: ${MASTER_ADDR}
   bindPort: ${APISERVER_SRC_PORT}
 nodeRegistration:
-  ignorePreflightErrors: 
+  ignorePreflightErrors:
     - all
   criSocket: unix:///var/run/crio/crio.sock
   imagePullPolicy: IfNotPresent
@@ -22,7 +22,7 @@ nodeRegistration:
 apiServer:
   timeoutForControlPlane: 4m0s
   extraArgs:
-    v: "${VERBOSITY}"
+    v: "2" # "${VERBOSITY}"
     audit-log-path: /var/log/kubernetes/audit/audit.log
     audit-policy-file: /etc/kubernetes/audit-policy.yaml
     audit-log-maxage: "7"
@@ -45,7 +45,7 @@ clusterName: kubernetes
 controlPlaneEndpoint: "${APISERVER_VIP}:${APISERVER_DEST_PORT}"
 controllerManager:
   extraArgs:
-    v: "${VERBOSITY}"
+    v: "2" # "${VERBOSITY}"
 dns: {}
 etcd:
   local:
@@ -59,7 +59,7 @@ networking:
   podSubnet: "10.244.0.0/16"
 scheduler:
   extraArgs:
-    v: "${VERBOSITY}"
+    v: "2" # "${VERBOSITY}"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 bindAddress: 0.0.0.0
@@ -71,7 +71,7 @@ clientConnection:
   kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
   qps: 0
 clusterCIDR: ""
-configSyncPeriod: 0s
+configSyncPeriod: 15m0s
 conntrack:
   maxPerCore: null
   min: null
@@ -89,13 +89,13 @@ iptables:
   masqueradeAll: false
   masqueradeBit: null
   minSyncPeriod: 0s
-  syncPeriod: 0s
+  syncPeriod: 30s
 ipvs:
   excludeCIDRs: null
   minSyncPeriod: 0s
   scheduler: ""
   strictARP: false
-  syncPeriod: 0s
+  syncPeriod: 30s
   tcpFinTimeout: 0s
   tcpTimeout: 0s
   udpTimeout: 0s
@@ -105,7 +105,7 @@ logging:
   options:
     json:
       infoBufferSize: "0"
-  verbosity: ${VERBOSITY}
+  verbosity: 2
 metricsBindAddress: ""
 mode: ""
 nodePortAddresses: null
@@ -135,7 +135,7 @@ authorization:
     cacheUnauthorizedTTL: 0s
 cgroupDriver: systemd
 clusterDNS:
-- 10.96.0.10
+  - 10.96.0.10
 clusterDomain: cluster.local
 containerRuntimeEndpoint: ""
 cpuManagerReconcilePeriod: 0s
@@ -151,7 +151,7 @@ logging:
   options:
     json:
       infoBufferSize: "0"
-  verbosity: ${VERBOSITY}
+  verbosity: 2
 memorySwap: {}
 nodeStatusReportFrequency: 0s
 nodeStatusUpdateFrequency: 0s

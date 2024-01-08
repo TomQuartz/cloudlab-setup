@@ -5,13 +5,13 @@ PROXY=${1:-"haproxy"} # nginx
 API_VIP=${2:-"10.10.1.100"} # gateway1
 API_DEST_PORT=${3:-"8443"}
 API_SRC_PORT=${4:-"6443"}
-CONTROLLER_LABEL=${5:-"controller"}
-WORKER_LABEL=${6:-"worker"}
-VERBOSITY=${7:-"4"}
+PROXY_LABEL=${5:-"controller1"} # TODO: set as controller for RR LB
+CONTROLLER_LABEL=${6:-"controller"}
+WORKER_LABEL=${7:-"worker"}
 
 # proxy for api server
 echo "setting up $PROXY"
-../proxy/${PROXY}.sh $API_VIP $API_DEST_PORT $API_SRC_PORT $CONTROLLER_LABEL
+../proxy/${PROXY}.sh $API_VIP $API_DEST_PORT $API_SRC_PORT $PROXY_LABEL
 
 if ! [ $? -eq 0 ]; then
     echo "Proxy setup failed"
@@ -34,8 +34,8 @@ fi
 # --control-plane-endpoint=$API_VIP:$API_DEST_PORT
 # --pod-network-cidr=10.244.0.0/16 (for flannel)
 # --ignore-preflight-errors=all
-mkdir -p conf && rm -f conf/*
-MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME VERBOSITY=$VERBOSITY \
+mkdir -p conf && rm -f conf/* # VERBOSITY=$VERBOSITY
+MASTER_NAME=$MASTER_NAME MASTER_ADDR=$MASTER_ADDR HOME=$HOME \
 APISERVER_VIP=$API_VIP APISERVER_DEST_PORT=$API_DEST_PORT APISERVER_SRC_PORT=$API_SRC_PORT \
         envsubst < templates/kubeadm-config.yaml > conf/kubeadm-config.yaml
 
@@ -59,6 +59,7 @@ for controller in ${CONTROLLERS[@]}; do
     if [ $controller == MASTER_NAME ]; then
         continue
     fi
+    echo "joining $controller"
     addr=`grep $controller /etc/hosts | awk '{print $1}'`
     ssh -q $controller -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
         --control-plane \
@@ -72,6 +73,7 @@ done
 
 WORKERS=`grep "$WORKER_LABEL" /etc/hosts | awk '{print $NF}'`
 for worker in ${WORKERS[@]}; do
+    echo "joining $worker"
     ssh -q $worker -- sudo kubeadm join ${API_VIP}:${API_DEST_PORT} \
         --token $TOKEN \
         --discovery-token-ca-cert-hash $TOKEN_HASH
